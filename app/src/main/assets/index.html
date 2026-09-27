@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PLRK Volley</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700;800&display=swap">
+<style>
+:root{
+  --ink:#14305A; --ink2:#1F4478; --ball:#F5C518; --bg:#F4F6F9; --card:#FFFFFF;
+  --text:#18212F; --muted:#5F6B7D; --line:#E2E7EE; --win:#1B8A57; --loss:#C2413A; --soft:#EAF0F8;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:"Barlow Condensed","Roboto Condensed","Arial Narrow",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 var(--body);-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer}
+.top{background:var(--ink);color:#fff;padding:14px 16px 10px;display:flex;align-items:center;gap:12px}
+.top h1{font:800 24px/1 var(--display);margin:0;letter-spacing:.3px}
+.top p{margin:3px 0 0;font-size:13px;color:#B9C7DB}
+.top .grow{flex:1}
+#refresh{background:transparent;border:1px solid #3A5B8C;color:#fff;border-radius:999px;width:42px;height:42px;display:grid;place-items:center}
+#refresh:focus-visible,.tab:focus-visible,.notice button:focus-visible{outline:3px solid var(--ball);outline-offset:2px}
+#refresh.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.teams{position:sticky;top:0;z-index:5;background:var(--ink);display:flex;overflow-x:auto;padding:0 8px;scrollbar-width:none}
+.teams::-webkit-scrollbar{display:none}
+.tab{flex:1 0 auto;background:none;border:0;color:#B9C7DB;padding:10px 12px 12px;font:700 18px/1 var(--display);border-bottom:4px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:#fff;border-bottom-color:var(--ball)}
+main{padding:16px;max-width:640px;margin:0 auto}
+.board{background:var(--ink);color:#fff;border-radius:18px;padding:16px 18px 14px;margin-bottom:14px}
+.board-head{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:#B9C7DB;margin-bottom:10px}
+.board-head b{color:#fff;font-weight:600}
+.row{display:flex;align-items:center;gap:12px;padding:8px 0}
+.row+.row{border-top:1px solid #2A4A7A}
+.row .nm{flex:1;font:700 24px/1.1 var(--display);text-transform:uppercase;overflow-wrap:anywhere}
+.row.us .nm{color:var(--ball)}
+.row .pl{font-size:12px;color:#B9C7DB;display:block;font:500 12px var(--body);text-transform:none;margin-top:2px}
+.row .sc{font:800 44px/1 var(--display);min-width:44px;text-align:right;color:#fff}
+.row.won .sc{color:var(--ball)}
+.board-foot{margin-top:8px;font-size:14px;color:#DDE6F2}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat .v{font:800 28px/1 var(--display);color:var(--ink)}
+.stat .v small{font-size:16px;color:var(--muted);font-weight:600}
+.stat .l{font-size:13px;color:var(--muted);margin-top:4px}
+h2{font:700 20px/1.2 var(--display);color:var(--ink);margin:22px 0 10px}
+.list{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.m{display:flex;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+.m:first-child{border-top:0}
+.m.now{background:var(--soft)}
+.m .j{font:800 18px/1 var(--display);color:var(--ink);min-width:34px}
+.m .main{flex:1;min-width:0}
+.m .opp{font-weight:600;overflow-wrap:anywhere}
+.m .meta{font-size:13px;color:var(--muted)}
+.m .det{font-size:13px;color:var(--text);margin-top:2px}
+.badge{font:700 16px/1 var(--display);padding:7px 9px;border-radius:8px;white-space:nowrap;text-align:center;min-width:56px}
+.b-win{background:var(--win);color:#fff}
+.b-loss{background:var(--loss);color:#fff}
+.b-draw{background:#8A94A6;color:#fff}
+.b-up{background:var(--soft);color:var(--ink)}
+.b-post{background:#FFF1C2;color:#6B5200}
+.b-bye{background:transparent;color:var(--muted);font-weight:600}
+.m.bye .opp{color:var(--muted);font-weight:500}
+.tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{font:600 13px var(--body);color:var(--muted);text-align:right;padding:9px 8px;border-bottom:1px solid var(--line)}
+td{text-align:right;padding:9px 8px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+tr:first-child td{border-top:0}
+th.t,td.t{text-align:left}
+td.t{font-weight:500}
+tr.club td{background:#F7F9FC}
+tr.me td{background:#FFF6D1;font-weight:700}
+td.pts{font-weight:700;color:var(--ink)}
+.notice{background:#FDECEA;color:#7A1F19;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px}
+.notice button{margin-top:8px;display:block;background:var(--loss);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-weight:600}
+.empty{color:var(--muted);text-align:center;padding:40px 10px}
+.skel{height:170px;border-radius:18px;background:linear-gradient(90deg,#E6EBF2 0,#F1F4F8 50%,#E6EBF2 100%);background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.foot{margin:22px 0 30px;font-size:13px;color:var(--muted);text-align:center}
+.foot a{color:var(--ink2)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <svg width="36" height="36" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" fill="#F5C518" stroke="#fff" stroke-width="2.5"/><path d="M26 2C17 13 17 33 30 49M4 20C17 23 34 20 47 10M7 40C21 32 38 34 49 34" fill="none" stroke="#14305A" stroke-width="2.5" stroke-linecap="round"/></svg>
+  <div class="grow"><h1>PLRK Volley</h1><p id="updated">Chargement…</p></div>
+  <button id="refresh" aria-label="Actualiser les données"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg></button>
+</header>
+<nav class="teams" id="teams" role="tablist" aria-label="Équipes"></nav>
+<main id="view"></main>
+
+<script>
+"use strict";
+const TEAMS = [
+  { id: "PLRK1", name: "PLRK 1", url: "https://volleyfsgt29n.com/groupe/groupe-a-mixte/" },
+  { id: "PLRK2", name: "PLRK 2", url: "https://volleyfsgt29n.com/groupe/groupe-b-mixte/" },
+  { id: "PLRK3", name: "PLRK 3", url: "https://volleyfsgt29n.com/groupe/groupe-c-mixte/" },
+  { id: "PLRK4", name: "PLRK 4", url: "https://volleyfsgt29n.com/groupe/groupe-d-mixte/" },
+  { id: "PLRK5", name: "PLRK 5", url: "https://volleyfsgt29n.com/groupe/groupe-e-mixte/" }
+];
+
+/* ---------- utilitaires ---------- */
+const norm = s => (s || "").toUpperCase().normalize("NFD").replace(/[^A-Z0-9]/g, "");
+const isExempt = s => /^exempt/i.test((s || "").trim());
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const flag = v => { v = (v || "").trim(); return v !== "" && v !== "0"; };
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+/* ---------- téléchargement (via Android, sans CORS) ---------- */
+const pending = {};
+window.onFetched = (id, ok, body) => {
+  const p = pending[id]; if (!p) return; delete pending[id];
+  ok ? p.resolve(body) : p.reject(new Error(body));
+};
+function getPage(url) {
+  if (window.Android && window.Android.fetch) {
+    return new Promise((resolve, reject) => {
+      const id = "r" + Date.now() + Math.random().toString(36).slice(2);
+      pending[id] = { resolve, reject };
+      window.Android.fetch(id, url);
+    });
+  }
+  return fetch(url).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); });
+}
+
+/* ---------- lecture de la page du groupe ---------- */
+function htmlToText(html) {
+  const t = document.createElement("textarea");
+  t.innerHTML = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|li|tr|pre)>/gi, "\n").replace(/<[^>]+>/g, "");
+  return t.value;
+}
+function parseGroup(html) {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  // 1) Calendrier + résultats : bloc CSV "ar;jo;ma;d;..." publié sur la page
+  let text = "";
+  for (const el of doc.querySelectorAll("textarea, pre, code")) {
+    if (el.textContent.indexOf("ar;jo;ma") !== -1) { text = el.textContent; break; }
+  }
+  if (!text) text = htmlToText(html);
+
+  const byKey = {};
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!/^[A-Z]{1,2};\d+;\d+;/.test(line)) continue;
+    const f = line.split(";").map(x => x.trim());
+    if (f.length < 12) continue;
+    const m = {
+      key: f[0] + "-" + f[1] + "-" + f[2], ar: f[0], jo: +f[1], ma: +f[2], label: f[3],
+      fh: f[4], rh: f[5], home: f[6], sh: f[8], sa: f[9], away: f[11],
+      ra: f[12] || "", fa: f[13] || "", report: f[14] || "", score: f[15] || "",
+      ph: f[16] || "", pa: f[17] || ""
+    };
+    byKey[m.key] = m;
+  }
+  const matches = Object.values(byKey);
+  // Complète une date manquante avec celle de la même journée
+  const lbl = {};
+  matches.forEach(m => { if (m.label) lbl[m.ar + m.jo] = m.label; });
+  matches.forEach(m => { if (!m.label) m.label = lbl[m.ar + m.jo] || ""; });
+
+  // 2) Classement : tableau contenant "nom" + "points"
+  const standings = [];
+  for (const table of doc.querySelectorAll("table")) {
+    const rows = [...table.querySelectorAll("tr")];
+    const hi = rows.findIndex(tr => { const t = norm(tr.textContent); return t.includes("NOM") && t.includes("POINTS"); });
+    if (hi < 0) continue;
+    const heads = [...rows[hi].children].map(c => norm(c.textContent));
+    const ni = heads.indexOf("NOM");
+    if (ni < 0) continue;
+    for (const tr of rows.slice(hi + 1)) {
+      const c = [...tr.children].map(x => x.textContent.trim());
+      if (c.length < ni + 5 || !c[ni]) continue;
+      standings.push({
+        rank: +c[0] || standings.length + 1, name: c[ni], pts: c[ni + 1], j: c[ni + 2],
+        g: c[ni + 3], p: c[ni + 4], sp: c[ni + 5] || "", sm: c[ni + 6] || "", diff: c[ni + 7] || ""
+      });
+    }
+    if (standings.length) break;
+  }
+
+  const h1 = doc.querySelector("h1");
+  const title = h1 ? h1.textContent.trim() : "";
+  return { title, matches, standings: standings.filter(s => !isExempt(s.name)) };
+}
+
+/* ---------- dates ---------- */
+function seasonStart() { const n = new Date(); return n.getMonth() >= 7 ? n.getFullYear() : n.getFullYear() - 1; }
+function parseRange(label) {
+  if (!label) return null;
+  const y0 = seasonStart(), yr = mo => (mo >= 8 ? y0 : y0 + 1);
+  let m = label.match(/du\s+(\d{1,2})(?:\/(\d{1,2}))?\s+au\s+(\d{1,2})\/(\d{1,2})/i);
+  if (m) {
+    const em = +m[4], sm = m[2] ? +m[2] : em;
+    return { start: new Date(yr(sm), sm - 1, +m[1]), end: new Date(yr(em), em - 1, +m[3], 23, 59) };
+  }
+  m = label.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if (m) {
+    const mo = +m[2], y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : yr(mo);
+    return { start: new Date(y, mo - 1, +m[1]), end: new Date(y, mo - 1, +m[1], 23, 59) };
+  }
+  return null;
+}
+function splitLabel(label) {
+  const m = (label || "").match(/^J(\d+)\w?\s*(.*)$/i);
+  return m ? { j: "J" + m[1], dates: m[2] } : { j: "", dates: label || "" };
+}
+function relDays(d) {
+  const a = new Date(); a.setHours(0, 0, 0, 0);
+  const b = new Date(d); b.setHours(0, 0, 0, 0);
+  const n = Math.round((b - a) / 864e5);
+  if (n === 0) return "aujourd'hui"; if (n === 1) return "demain";
+  if (n > 1) return "dans " + n + " jours";
+  return "";
+}
+function fmtAgo(ts) {
+  const s = (Date.now() - ts) / 1000;
+  if (s < 60) return "à l'instant";
+  if (s < 3600) return "il y a " + Math.floor(s / 60) + " min";
+  if (s < 86400) return "il y a " + Math.floor(s / 3600) + " h";
+  const d = new Date(ts);
+  return "le " + String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + " à " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+}
+
+/* ---------- résultat d'un match pour notre équipe ---------- */
+function outcome(m, key) {
+  const home = norm(m.home) === key;
+  const opp = home ? m.away : m.home;
+  if (isExempt(opp)) return { type: "bye" };
+  const my = home ? m.sh : m.sa, their = home ? m.sa : m.sh;
+  if (flag(home ? m.fh : m.fa)) return { type: "loss", text: "Forfait" };
+  if (flag(home ? m.fa : m.fh)) return { type: "win", text: "Forfait adv." };
+  if (my !== "" && their !== "" && !(+my === 0 && +their === 0)) {
+    const t = +my > +their ? "win" : +my < +their ? "loss" : "draw";
+    return { type: t, my, their };
+  }
+  if (flag(m.report) || flag(m.rh) || flag(m.ra)) return { type: "post" };
+  return { type: "up" };
+}
+
+/* ---------- état ---------- */
+const state = { current: store.get("current") || "PLRK1", data: {}, loading: new Set(), errors: {} };
+if (!TEAMS.some(t => t.id === state.current)) state.current = "PLRK1";
+TEAMS.forEach(t => { const c = store.get("data:" + t.id); if (c) state.data[t.id] = c; });
+
+async function loadTeam(t) {
+  state.loading.add(t.id); delete state.errors[t.id]; render();
+  try {
+    const html = await getPage(t.url);
+    const parsed = parseGroup(html);
+    if (!parsed.matches.length && !parsed.standings.length) throw new Error("La page du groupe ne contient pas de calendrier lisible.");
+    parsed.fetchedAt = Date.now();
+    state.data[t.id] = parsed;
+    store.set("data:" + t.id, parsed);
+  } catch (e) {
+    state.errors[t.id] = (e && e.message) || String(e);
+  } finally {
+    state.loading.delete(t.id); render();
+  }
+}
+const refreshAll = () => TEAMS.forEach(loadTeam);
+
+/* ---------- affichage ---------- */
+const $ = id => document.getElementById(id);
+function renderTabs() {
+  $("teams").innerHTML = TEAMS.map(t =>
+    `<button class="tab" role="tab" data-team="${t.id}" aria-selected="${t.id === state.current}">${esc(t.name)}</button>`).join("");
+}
+function badge(r) {
+  switch (r.type) {
+    case "win": return `<span class="badge b-win">${r.text ? esc(r.text) : "V " + esc(r.my) + "–" + esc(r.their)}</span>`;
+    case "loss": return `<span class="badge b-loss">${r.text ? esc(r.text) : "D " + esc(r.my) + "–" + esc(r.their)}</span>`;
+    case "draw": return `<span class="badge b-draw">N ${esc(r.my)}–${esc(r.their)}</span>`;
+    case "post": return `<span class="badge b-post">Reporté</span>`;
+    case "bye": return `<span class="badge b-bye">Repos</span>`;
+    default: return `<span class="badge b-up">À venir</span>`;
+  }
+}
+function render() {
+  renderTabs();
+  $("refresh").classList.toggle("spin", state.loading.size > 0);
+  const t = TEAMS.find(x => x.id === state.current);
+  const d = state.data[t.id], err = state.errors[t.id], loading = state.loading.has(t.id);
+  $("updated").textContent = d && d.fetchedAt ? "Mis à jour " + fmtAgo(d.fetchedAt) : loading ? "Chargement…" : "Aucune donnée";
+
+  let h = "";
+  if (err) h += `<div class="notice"><strong>Impossible de récupérer ${esc(t.name)}.</strong> ${esc(err)}${d ? " Les dernières données enregistrées sont affichées." : " Vérifiez la connexion internet."}<button data-retry="${t.id}">Réessayer</button></div>`;
+  if (!d) { $("view").innerHTML = h + (loading ? `<div class="skel"></div>` : `<p class="empty">Touchez le bouton d'actualisation pour charger le calendrier.</p>`); return; }
+
+  const key = norm(t.name);
+  const now = Date.now();
+  const mine = d.matches
+    .filter(m => norm(m.home) === key || norm(m.away) === key)
+    .map(m => Object.assign({}, m, { range: parseRange(m.label), res: outcome(m, key), isHome: norm(m.home) === key }))
+    .sort((a, b) => a.ar.localeCompare(b.ar) || a.jo - b.jo);
+
+  if (!mine.length) h += `<div class="notice">${esc(t.name)} n'apparaît pas dans le calendrier de ce groupe. Le club a peut-être changé de groupe : vérifiez l'adresse sur le site.</div>`;
+
+  // Prochain match (ou dernier résultat)
+  const real = mine.filter(m => m.res.type !== "bye");
+  let next = real.find(m => (m.res.type === "up" || m.res.type === "post") && (!m.range || m.range.end.getTime() >= now));
+  const played = real.filter(m => ["win", "loss", "draw"].includes(m.res.type));
+  const last = played[played.length - 1];
+  const show = next || last;
+  if (show) {
+    const lb = splitLabel(show.label);
+    const isNext = show === next;
+    const inWeek = show.range && show.range.start.getTime() <= now && show.range.end.getTime() >= now;
+    const hs = show.res.type === "up" || show.res.type === "post" ? "" : (show.isHome ? show.res.my : show.res.their);
+    const as = hs === "" ? "" : (show.isHome ? show.res.their : show.res.my);
+    const homeWon = hs !== "" && +hs > +as, awayWon = hs !== "" && +as > +hs;
+    const foot = isNext
+      ? (show.isHome ? "À domicile" : "À l'extérieur") + (inWeek ? ", cette semaine" : show.range ? ", " + relDays(show.range.start) : "") + (show.res.type === "post" ? " (reporté)" : "")
+      : (show.res.type === "win" ? "Victoire" : show.res.type === "loss" ? "Défaite" : "Match nul") + (show.score ? " : " + show.score : "");
+    h += `<section class="board" aria-label="${isNext ? "Prochain match" : "Dernier résultat"}">
+      <div class="board-head"><span>${isNext ? "Prochain match" : "Dernier résultat"}</span><b>${esc(lb.j)} ${esc(lb.dates)}</b></div>
+      <div class="row ${show.isHome ? "us" : ""} ${homeWon ? "won" : ""}"><span class="nm">${esc(show.home)}<span class="pl">Recevant</span></span><span class="sc">${hs === "" ? "" : esc(hs)}</span></div>
+      <div class="row ${!show.isHome ? "us" : ""} ${awayWon ? "won" : ""}"><span class="nm">${esc(show.away)}<span class="pl">Visiteur</span></span><span class="sc">${as === "" ? "" : esc(as)}</span></div>
+      <div class="board-foot">${esc(foot)}</div></section>`;
+  } else if (mine.length) {
+    h += `<section class="board"><div class="board-head"><span>Saison</span></div><div class="board-foot">Aucun match à venir pour le moment.</div></section>`;
+  }
+
+  // Chiffres clés
+  const me = d.standings.find(s => norm(s.name) === key);
+  if (me) {
+    h += `<div class="stats">
+      <div class="stat"><div class="v">${esc(me.rank)}<small>/${d.standings.length}</small></div><div class="l">Classement</div></div>
+      <div class="stat"><div class="v">${esc(me.pts)}</div><div class="l">Points</div></div>
+      <div class="stat"><div class="v">${esc(me.g)}<small>–${esc(me.p)}</small></div><div class="l">Victoires–défaites</div></div></div>`;
+  }
+
+  // Calendrier
+  if (mine.length) {
+    h += `<h2>Calendrier et résultats</h2><ul class="list">`;
+    for (const m of mine) {
+      const lb = splitLabel(m.label);
+      const opp = m.isHome ? m.away : m.home;
+      const inWeek = m.range && m.range.start.getTime() <= now && m.range.end.getTime() >= now;
+      const bye = m.res.type === "bye";
+      const meta = bye ? esc(lb.dates) : (m.isHome ? "Domicile" : "Extérieur") + ", " + esc(lb.dates);
+      const det = [m.score ? "Sets : " + esc(m.score) : "", flag(m.report) ? "Reporté au " + esc(m.report) : ""].filter(Boolean).join("<br>");
+      h += `<li class="m ${inWeek ? "now" : ""} ${bye ? "bye" : ""}">
+        <span class="j">${esc(lb.j || "J" + m.jo)}</span>
+        <div class="main"><div class="opp">${bye ? "Exempt, pas de match" : esc(opp)}</div><div class="meta">${meta}</div>${det ? `<div class="det">${det}</div>` : ""}</div>
+        ${badge(m.res)}</li>`;
+    }
+    h += `</ul>`;
+  }
+
+  // Classement
+  if (d.standings.length) {
+    h += `<h2>Classement ${esc(d.title.replace(/^groupe\s*/i, "groupe "))}</h2><div class="tablewrap"><table>
+      <thead><tr><th>#</th><th class="t">Équipe</th><th>Pts</th><th>J</th><th>G</th><th>P</th><th>Diff</th></tr></thead><tbody>`;
+    for (const s of d.standings) {
+      const cls = norm(s.name) === key ? "me" : norm(s.name).startsWith("PLRK") ? "club" : "";
+      h += `<tr class="${cls}"><td>${esc(s.rank)}</td><td class="t">${esc(s.name)}</td><td class="pts">${esc(s.pts)}</td><td>${esc(s.j)}</td><td>${esc(s.g)}</td><td>${esc(s.p)}</td><td>${esc(s.diff)}</td></tr>`;
+    }
+    h += `</tbody></table></div>`;
+  }
+
+  h += `<p class="foot">Source : <a href="${esc(t.url)}">volleyfsgt29n.com</a></p>`;
+  $("view").innerHTML = h;
+}
+
+/* ---------- interactions ---------- */
+$("teams").addEventListener("click", e => {
+  const b = e.target.closest("[data-team]"); if (!b) return;
+  state.current = b.dataset.team; store.set("current", state.current); render();
+  window.scrollTo(0, 0);
+});
+$("view").addEventListener("click", e => {
+  const b = e.target.closest("[data-retry]"); if (!b) return;
+  const t = TEAMS.find(x => x.id === b.dataset.retry); if (t) loadTeam(t);
+});
+$("refresh").addEventListener("click", refreshAll);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  const stale = TEAMS.some(t => !state.data[t.id] || Date.now() - state.data[t.id].fetchedAt > 30 * 60 * 1000);
+  if (stale && state.loading.size === 0) refreshAll();
+});
+
+render();
+refreshAll();
+</script>
+</body>
+</html>
